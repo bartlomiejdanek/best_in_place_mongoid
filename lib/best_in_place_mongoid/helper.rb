@@ -2,10 +2,18 @@ module BestInPlaceMongoid
   module BestInPlaceMongoidHelpers
 
     def best_in_place(object, field, opts = {})
+      if opts[:display_as] && opts[:display_with]
+        raise ArgumentError, "Can't use both 'display_as' and 'display_with' options at the same time"
+      end
+
+      if opts[:display_with] && !opts[:display_with].is_a?(Proc) && !ViewHelpers.respond_to?(opts[:display_with])
+        raise ArgumentError, "Can't find helper #{opts[:display_with]}"
+      end
+      
       opts[:type] ||= :input
       opts[:collection] ||= []
       field = field.to_s
-      value = object.send(field).blank? ? "" : object.send(field)
+      value = build_value_for(object, field, opts)
       collection = nil
       if opts[:type] == :select && !opts[:collection].blank?
         v = object.send(field)
@@ -48,6 +56,33 @@ module BestInPlaceMongoid
         object.send field
       end
     end
+    
+    private
+       def build_value_for(object, field, opts)
+         if opts[:display_as]
+           BestInPlaceMongoid::DisplayMethods.add_model_method(object.class.to_s, field, opts[:display_as])
+           object.send(opts[:display_as]).to_s
+
+         elsif opts[:display_with].try(:is_a?, Proc)
+           opts[:display_with].call(object.send(field))
+
+         elsif opts[:display_with]
+           BestInPlaceMongoid::DisplayMethods.add_helper_method(object.class.to_s, field, opts[:display_with], opts[:helper_options])
+           if opts[:helper_options]
+             BestInPlaceMongoid::ViewHelpers.send(opts[:display_with], object.send(field), opts[:helper_options])
+           else
+             BestInPlaceMongoid::ViewHelpers.send(opts[:display_with], object.send(field))
+           end
+
+         else
+           object.send(field).to_s.presence || ""
+         end
+       end
+
+       def attribute_escape(data)
+         data.to_s.gsub("&", "&amp;").gsub("'", "&apos;") unless data.nil?
+       end
+     
   end
 end
 

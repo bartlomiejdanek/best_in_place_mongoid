@@ -19,6 +19,17 @@ describe BestInPlaceMongoid::BestInPlaceMongoidHelpers do
       span = nk.css("span")
       span.should_not be_empty
     end
+    
+    describe "display as" do
+      before do
+        nk = Nokogiri::HTML.parse(helper.best_in_place @user, :name, display_as: :email)
+        @span = nk.css("span")
+      end
+      
+      it "should have the email as the display" do
+        @span.text.should eq(@user.email)
+      end
+    end
 
     describe "general properties" do
       before do
