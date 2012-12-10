@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_dependency "rails", "~> 3.1.0"
-  s.add_dependency "mongoid", "~> 2.3.3"
+  s.add_dependency "mongoid", "~> 2.4.2"
   s.add_dependency "jquery-rails"
 
   s.add_development_dependency "rspec-rails", "~> 2.7.0"
